@@ -11,3 +11,5 @@ Module.symvers
 modules.order
 .tmp_versions
 Modules.symvers
+
+compile_commands.json
