@@ -6,6 +6,4 @@ obj-m += ecm_dma.o
 all:
 	make -C $(KDIR) SUBDIRS=$(PWD) M=$(PWD)  modules 
 clean:
-	rm -f *.o *~ core .depend .*.cmd *.ko *.mod.c
-	rm -f Module.markers Module.symvers modules.order
-	rm -rf .tmp_versions Modules.symvers
+	make -C $(KDIR) SUBDIRS=$(PWD) M=$(PWD)  clean
