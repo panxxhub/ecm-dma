@@ -719,9 +719,7 @@ static int xilinx_dma_alloc_chan_resources(struct dma_chan *dma_chan)
 
 	dma_cookie_init(dma_chan);
 
-	/* For AXI DMA resetting once channel will reset the
-   * other channel as well so enable the interrupts here.
-   */
+	/* For AXI DMA resetting once channel will reset, the other channel as well so enable the interrupts here.  */
 	dma_ctrl_set(chan, XILINX_DMA_REG_DMACR, XILINX_DMA_DMAXR_ALL_IRQ_MASK);
 
 	return 0;
@@ -1149,6 +1147,8 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 
 	dma_async_tx_descriptor_init(&desc->async_tx, &chan->common);
 	desc->async_tx.tx_submit = xilinx_dma_tx_submit;
+
+	// check direction
 
 	for_each_sg(sgl, sg, sg_len, i) {
 		sg_used = 0;
