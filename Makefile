@@ -1,9 +1,17 @@
-KDIR = ../linux-xlnx
+obj-m := ecm_dma.o
 
-obj-m += ecm_dma.o
-# specify flags for the module compilation
+# MY_CFLAGS += -g -DDEBUG
+# ccflags-y += ${MY_CFLAGS}
+
+SRC := $(shell pwd)
 
 all:
-	make -C $(KDIR) SUBDIRS=$(PWD) M=$(PWD)  modules 
+	$(MAKE) -C $(KERNEL_SRC) M=$(SRC)
+
+modules_install:
+	$(MAKE) -C $(KERNEL_SRC) M=$(SRC) modules_install
+
 clean:
-	make -C $(KDIR) SUBDIRS=$(PWD) M=$(PWD)  clean
+	rm -f *.o *~ core .depend .*.cmd *.ko *.mod.c
+	rm -f Module.markers Module.symvers modules.order
+	rm -rf .tmp_versions Modules.symvers
