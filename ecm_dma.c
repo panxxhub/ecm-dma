@@ -1633,7 +1633,7 @@ static struct dma_chan *of_dma_xilinx_xlate(struct of_phandle_args *dma_spec,
 }
 
 static const struct of_device_id xilinx_dma_of_ids[] = {
-	{ .compatible = "icnc,ecm-dma" },
+	{ .compatible = "icnc,axi-dma" },
 	{}
 };
 MODULE_DEVICE_TABLE(of, xilinx_dma_of_ids);
@@ -1781,7 +1781,7 @@ static int xilinx_dma_remove(struct platform_device *pdev)
 
 static struct platform_driver xilinx_dma_driver = {
 	.driver = {
-		.name = "ecm-dma",
+		.name = "icnc,axi-dma",
 		.of_match_table = xilinx_dma_of_ids,
 	},
 	.probe = xilinx_dma_probe,
