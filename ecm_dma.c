@@ -1,9 +1,10 @@
 #include "dma_engine.h"
 
-#include "linux/bits.h"
-#include "linux/irqreturn.h"
-#include "linux/mod_devicetable.h"
-#include "linux/stddef.h"
+#include <linux/of_address.h>
+#include <linux/bits.h>
+#include <linux/irqreturn.h>
+#include <linux/mod_devicetable.h>
+#include <linux/stddef.h>
 #include <linux/iopoll.h>
 #include <linux/interrupt.h>
 #include <linux/kernel.h>
@@ -329,6 +330,7 @@ struct xilinx_dma_device {
 	u32 s2mm_chan_id;
 	u32 mm2s_chan_id;
 	u32 max_buffer_len;
+	bool is_coherent;
 };
 
 /* MACROs */
@@ -1726,6 +1728,7 @@ static int xilinx_dma_probe(struct platform_device *pdev)
 	/* Initialize the channels */
 	for_each_child_of_node(node, child) {
 		err = xilinx_dma_child_probe(xdev, child);
+		dev_err(xdev->dev, "xilinx_dma_child_probe err = %d", err);
 		if (err < 0)
 			goto disable_clks;
 	}
@@ -1743,8 +1746,9 @@ static int xilinx_dma_probe(struct platform_device *pdev)
 		dma_async_device_unregister(&xdev->common);
 		goto error;
 	}
+	xdev->is_coherent = of_dma_is_coherent(node);
 
-	dev_info(&pdev->dev, "Xilinx AXI DMA Engine Driver Probed!!\n");
+	dev_info(&pdev->dev, "iCNC's Xilinx AXI DMA Engine Driver Probed!\n");
 	return 0;
 
 disable_clks:
