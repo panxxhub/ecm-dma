@@ -1070,7 +1070,14 @@ static irqreturn_t xilinx_dma_irq_handler(int irq, void *data)
 		spin_unlock(&chan->lock);
 	}
 
-	tasklet_schedule(&chan->tasklet);
+	/**
+	 * @brief schedule tasklet in high priority, cause during
+	 * the tasklet we would do the callback and finish the bd's completion
+	 * while at the master thread we're polling the bd's completion,
+	 * so we need to make sure the tasklet as high priority as possible
+	 */
+
+	tasklet_hi_schedule(&chan->tasklet);
 	return IRQ_HANDLED;
 }
 
