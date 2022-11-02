@@ -849,6 +849,9 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 	struct xilinx_axidma_tx_segment *tail_segment;
 	u32 reg;
 
+	// FIXME: just for debugging, we'll remove this later
+	dev_info(chan->dev, "start transfer\n");
+
 	if (chan->err)
 		return;
 
@@ -889,9 +892,10 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 				     chan->cyclic_seg_v->phys);
 		else {
 			// FIXME: just for debugging, we'll remove this later
-			dev_info(chan->dev,
-				 "head segment phys: %x, tail segment phys: %x",
-				 head_desc->async_tx.phys, tail_segment->phys);
+			dev_info(
+				chan->dev,
+				"head segment phys: %x, tail segment phys: %x\n",
+				head_desc->async_tx.phys, tail_segment->phys);
 
 			xilinx_write(chan, XILINX_DMA_REG_TAILDESC,
 				     tail_segment->phys);
