@@ -423,6 +423,9 @@ xilinx_axidma_alloc_tx_segment(struct xilinx_dma_chan *chan)
 	}
 	spin_unlock_irqrestore(&chan->lock, flags);
 
+	if (!segment)
+		dev_dbg(chan->dev, "No free segment available\n");
+
 	return segment;
 }
 
@@ -686,9 +689,6 @@ static int xilinx_dma_alloc_chan_resources(struct dma_chan *dma_chan)
 	struct xilinx_dma_chan *chan = to_xilinx_chan(dma_chan);
 	int i;
 
-	// if (chan->desc_pool) , dma pool is used for mcdma, we don't use it
-	// 	return 0;
-
 	/* allocate the buffer descriptors */
 	chan->seg_v = dma_alloc_coherent(
 		chan->dev, sizeof(*chan->seg_v) * XILINX_DMA_NUM_DESCS,
@@ -705,7 +705,6 @@ static int xilinx_dma_alloc_chan_resources(struct dma_chan *dma_chan)
 	 * so allocating a desc segment during channel allocation for programming  
 	 * tail descriptor
 	 */
-	// TODO(pan): check if the BD_NUM in cyclic mode is only 1
 	chan->cyclic_seg_v =
 		dma_alloc_coherent(chan->dev, sizeof(*chan->cyclic_seg_v),
 				   &chan->cyclic_seg_p, GFP_KERNEL);
@@ -733,9 +732,10 @@ static int xilinx_dma_alloc_chan_resources(struct dma_chan *dma_chan)
 
 	dma_cookie_init(dma_chan);
 
-	/* For AXI DMA resetting once channel will reset the
-		 * other channel as well so enable the interrupts here.
-		 */
+	/**
+	 * @brief For AXI DMA resetting once channel will reset the
+	 * other channel as well so enable the interrupts here.
+	 */
 	dma_ctrl_set(chan, XILINX_DMA_REG_DMACR, XILINX_DMA_DMAXR_ALL_IRQ_MASK);
 
 	return 0;
@@ -887,9 +887,15 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 			// to start cyclic transfer, set he tail descriptor to a detached descriptor
 			xilinx_write(chan, XILINX_DMA_REG_TAILDESC,
 				     chan->cyclic_seg_v->phys);
-		else
+		else {
+			// FIXME: just for debugging, we'll remove this later
+			dev_info(chan->dev,
+				 "head segment phys: %x, tail segment phys: %x",
+				 head_desc->async_tx.phys, tail_segment->phys);
+
 			xilinx_write(chan, XILINX_DMA_REG_TAILDESC,
 				     tail_segment->phys);
+		}
 	} else {
 		struct xilinx_axidma_tx_segment *segment;
 		struct xilinx_axidma_desc_hw *hw;
