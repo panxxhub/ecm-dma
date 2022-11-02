@@ -849,9 +849,6 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 	struct xilinx_axidma_tx_segment *tail_segment;
 	u32 reg;
 
-	// FIXME: just for debugging, we'll remove this later
-	dev_info(chan->dev, "start transfer\n");
-
 	if (chan->err)
 		return;
 
@@ -859,6 +856,8 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 		return;
 	if (!chan->idle)
 		return;
+	// FIXME: just for debugging, we'll remove this later
+	dev_info(chan->dev, "start transfer\n");
 
 	head_desc = list_first_entry(&chan->pending_list,
 				     struct xilinx_dma_tx_descriptor, node);
