@@ -901,7 +901,7 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 				&head_desc->segments,
 				struct xilinx_axidma_tx_segment, node);
 
-			dev_info(chan->dev, "head buf addr: %x\n",
+			dev_info(chan->dev, "head buff addr: %p\n",
 				 segment->hw.buf_addr);
 
 			xilinx_write(chan, XILINX_DMA_REG_TAILDESC,
