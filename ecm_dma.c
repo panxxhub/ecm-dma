@@ -547,8 +547,10 @@ static void xilinx_dma_free_chan_resources(struct dma_chan *dma_chan)
 			  sizeof(*chan->seg_v) * XILINX_DMA_NUM_DESCS,
 			  chan->seg_v, chan->seg_p);
 
-	/* Free memory that is allocated for cyclic DMA Mode */
-	// TODO!(pan): check if the BD_NUM in cyclic mode is only 1
+	/**
+	 * @brief The BD_NUM in cyclic mode is only 1,
+	 * this bd is only reserved for the cyclic mode, will never be used in the normal mode
+	 */
 	dma_free_coherent(chan->dev, sizeof(*chan->cyclic_seg_v),
 			  chan->cyclic_seg_v, chan->cyclic_seg_p);
 }
@@ -852,14 +854,8 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 	if (chan->err)
 		return;
 
-	if (list_empty(&chan->pending_list)) {
-		// FIXME: just for debug, remove it later
+	if (list_empty(&chan->pending_list))
 		return;
-	}
-
-	dev_info(chan->dev,
-		 "No pending descriptors for channel %p, is idle %s\n", chan,
-		 chan->idle ? "true" : "false");
 
 	if (!chan->idle)
 		return;
@@ -895,11 +891,10 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 			xilinx_write(chan, XILINX_DMA_REG_TAILDESC,
 				     chan->cyclic_seg_v->phys);
 		else {
-			// FIXME: just for debugging, we'll remove this later
-			dev_info(
-				chan->dev,
-				"head segment phys: %x, tail segment phys: %x\n",
-				head_desc->async_tx.phys, tail_segment->phys);
+			// dev_info(
+			// 	chan->dev,
+			// 	"head segment phys: %x, tail segment phys: %x\n",
+			// 	head_desc->async_tx.phys, tail_segment->phys);
 
 			xilinx_write(chan, XILINX_DMA_REG_TAILDESC,
 				     tail_segment->phys);
