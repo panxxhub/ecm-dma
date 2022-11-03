@@ -1229,7 +1229,7 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 		// FIXME: we shall remove it later
 		dev_info(chan->dev,
 			 "sg_dma_address(sg) = %p, sg_len(sg) = %x \n",
-			 (void *)sg_dma_address(sg), sg_dma_len(sg));
+			 sg_dma_address(sg), sg_dma_len(sg));
 
 		while (sg_used < sg_dma_len(sg)) {
 			struct xilinx_axidma_desc_hw *hw;
