@@ -852,6 +852,8 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 {
 	struct xilinx_dma_tx_descriptor *head_desc, *tail_desc;
 	struct xilinx_axidma_tx_segment *tail_segment;
+	struct xilinx_axidma_tx_segment *test_segment;
+
 	u32 reg;
 
 	if (chan->err)
@@ -881,6 +883,12 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 		xilinx_write(chan, XILINX_DMA_REG_CURDESC,
 			     head_desc->async_tx.phys);
 
+	// FIXME: just for debug
+	test_segment = list_first_entry(&head_desc->segments,
+					struct xilinx_axidma_tx_segment, node);
+
+	dev_info(chan->dev, "head buff addr: %p\n", test_segment->hw.buf_addr);
+
 	xilinx_dma_start(chan);
 
 	if (chan->err)
@@ -894,16 +902,6 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 			xilinx_write(chan, XILINX_DMA_REG_TAILDESC,
 				     chan->cyclic_seg_v->phys);
 		else {
-			struct xilinx_axidma_tx_segment *segment;
-
-			// FIXME: just for debug
-			segment = list_first_entry(
-				&head_desc->segments,
-				struct xilinx_axidma_tx_segment, node);
-
-			dev_info(chan->dev, "head buff addr: %p\n",
-				 segment->hw.buf_addr);
-
 			xilinx_write(chan, XILINX_DMA_REG_TAILDESC,
 				     tail_segment->phys);
 		}
@@ -1245,6 +1243,8 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 			xilinx_axidma_set_buf_addr(chan, hw, sg_dma_address(sg),
 						   sg_used, 0);
 			hw->control = copy;
+			dev_info(chan->dev, "hw->buf_addr = %p \n",
+				 hw->buf_addr);
 
 			sg_used += copy;
 
