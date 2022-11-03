@@ -895,10 +895,8 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 				     chan->cyclic_seg_v->phys);
 		else {
 			// FIXME: just for debug
-			dev_info(
-				chan->dev,
-				"head segment phys: %x, tail segment phys: %x\n",
-				head_desc->async_tx.phys, tail_segment->phys);
+			dev_info(chan->dev, "tail buf addr: %x\n",
+				 tail_segment->hw.buf_addr);
 
 			xilinx_write(chan, XILINX_DMA_REG_TAILDESC,
 				     tail_segment->phys);
