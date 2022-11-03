@@ -1226,6 +1226,11 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 	for_each_sg(sgl, sg, sg_len, i) {
 		sg_used = 0;
 
+		// FIXME: we shall remove it later
+		dev_info(chan->dev,
+			 "sg_dma_address(sg) = %x, sg_len(sg) = %x \n",
+			 sg_dma_address(sg), sg_dma_len(sg));
+
 		while (sg_used < sg_dma_len(sg)) {
 			struct xilinx_axidma_desc_hw *hw;
 
@@ -1237,11 +1242,6 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 			hw = &segment->hw;
 
 			/* Fill the descriptor */
-			// FIXME: we shall remove it later
-			dev_info(chan->dev,
-				 "sg_dma_address(sg) = %x, sg_len(sg) = %x \n",
-				 sg_dma_address(sg), sg_dma_len(sg));
-
 			xilinx_axidma_set_buf_addr(chan, hw, sg_dma_address(sg),
 						   sg_used, 0);
 			hw->control = copy;
