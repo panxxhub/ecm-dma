@@ -854,10 +854,13 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 
 	if (list_empty(&chan->pending_list)) {
 		// FIXME: just for debug, remove it later
-		dev_info(chan->dev, "No pending descriptors for channel %p\n",
-			 chan);
 		return;
 	}
+
+	dev_info(chan->dev,
+		 "No pending descriptors for channel %p, is idle %s\n", chan,
+		 chan->idle ? "true" : "false");
+
 	if (!chan->idle)
 		return;
 
