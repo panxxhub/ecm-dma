@@ -57,6 +57,7 @@
         "tdest",
         "TDEST",
         "txclk",
+        "TXSOF",
         "unprepare",
         "vdma",
         "VDMA",

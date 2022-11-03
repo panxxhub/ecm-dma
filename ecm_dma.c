@@ -387,10 +387,11 @@ static inline void xilinx_write(struct xilinx_dma_chan *chan, u32 reg,
 		dma_ctrl_write(chan, reg, addr);
 }
 
-static inline void xilinx_axidma_buf(struct xilinx_dma_chan *chan,
-				     struct xilinx_axidma_desc_hw *hw,
-				     dma_addr_t buf_addr, size_t sg_used,
-				     size_t period_len)
+static inline void xilinx_axidma_set_buf_addr(struct xilinx_dma_chan *chan,
+					      struct xilinx_axidma_desc_hw *hw,
+					      const dma_addr_t buf_addr,
+					      const size_t sg_used,
+					      const size_t period_len)
 {
 	if (unlikely(chan->ext_addr)) {
 		hw->buf_addr = lower_32_bits(buf_addr + sg_used + period_len);
@@ -689,12 +690,14 @@ static void xilinx_dma_do_tasklet(struct tasklet_struct *t)
 static int xilinx_dma_alloc_chan_resources(struct dma_chan *dma_chan)
 {
 	struct xilinx_dma_chan *chan = to_xilinx_chan(dma_chan);
+	dma_addr_t desc_addr = 0;
 	int i;
 
 	/* allocate the buffer descriptors */
 	chan->seg_v = dma_alloc_coherent(
 		chan->dev, sizeof(*chan->seg_v) * XILINX_DMA_NUM_DESCS,
 		&chan->seg_p, GFP_KERNEL);
+
 	if (!chan->seg_v) {
 		dev_err(chan->dev, "unable to allocate channel %d descriptors",
 			chan->id);
@@ -719,15 +722,15 @@ static int xilinx_dma_alloc_chan_resources(struct dma_chan *dma_chan)
 				  chan->seg_v, chan->seg_p);
 		return -ENOMEM;
 	}
+
 	chan->cyclic_seg_v->phys = chan->cyclic_seg_p;
 	for (i = 0; i < XILINX_DMA_NUM_DESCS; i++) {
-		// chan->seg_v[i].phys = chan->seg_p + i * sizeof(*chan->seg_v);
-		chan->seg_v[i].hw.next_desc = lower_32_bits(
-			chan->seg_p + sizeof(*chan->seg_v) *
-					      ((i + 1) * XILINX_DMA_NUM_DESCS));
-		chan->seg_v[i].hw.next_desc_msb = upper_32_bits(
-			chan->seg_p + sizeof(*chan->seg_v) *
-					      ((i + 1) * XILINX_DMA_NUM_DESCS));
+		desc_addr =
+			chan->seg_p +
+			sizeof(*chan->seg_v) * ((i + 1) * XILINX_DMA_NUM_DESCS);
+
+		chan->seg_v[i].hw.next_desc = lower_32_bits(desc_addr);
+		chan->seg_v[i].hw.next_desc_msb = upper_32_bits(desc_addr);
 		chan->seg_v[i].phys = chan->seg_p + i * sizeof(*chan->seg_v);
 		list_add_tail(&chan->seg_v[i].node, &chan->free_seg_list);
 	}
@@ -1092,7 +1095,11 @@ static irqreturn_t xilinx_dma_irq_handler(int irq, void *data)
 }
 
 /**
- * @brief Queuing descriptor
+ * @brief chain tx descriptor's head segments to the channel's pending list's
+ * tail descriptor's tail segment
+ *
+ * pseudo code:
+ *   pending_list->tail_descriptor->tail_segment->next_segment = new_descriptor->head_segment
  * 
  * @param chan 
  * @param desc 
@@ -1112,6 +1119,7 @@ static void append_desc_queue(struct xilinx_dma_chan *chan,
 				       struct xilinx_axidma_tx_segment, node);
 	tail_segment->hw.next_desc = cpu_to_le32(desc->async_tx.phys);
 append:
+	// add the new descriptor to the pending list
 	list_add_tail(&desc->node, &chan->pending_list);
 	chan->desc_pendingcount++;
 }
@@ -1223,19 +1231,18 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 			copy = xilinx_dma_calc_copysize(chan, sg_dma_len(sg),
 							sg_used);
 			hw = &segment->hw;
-			xilinx_axidma_buf(chan, hw, sg_dma_address(sg), sg_used,
-					  0);
-			hw->control = copy;
 
-			if (chan->direction == DMA_MEM_TO_DEV) {
-				if (app_w)
-					memcpy(hw->app, app_w,
-					       sizeof(u32) *
-						       XILINX_DMA_NUM_APP_WORDS);
-			}
+			/* Fill the descriptor */
+			xilinx_axidma_set_buf_addr(chan, hw, sg_dma_address(sg),
+						   sg_used, 0);
+			hw->control = copy;
 
 			sg_used += copy;
 
+			/**
+			 * @brief Insert the segment into the descriptor segments
+			 * list
+			 */
 			list_add_tail(&segment->node, &desc->segments);
 		}
 	}
@@ -1246,6 +1253,10 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 
 	if (chan->direction == DMA_MEM_TO_DEV) {
 		segment->hw.control |= XILINX_DMA_BD_SOP;
+		// NOTE!: we only need copy the user's APP WORDs at the first BD(TXSOF=1)
+		if (app_w)
+			memcpy(segment->hw.app, app_w,
+			       sizeof(u32) * XILINX_DMA_NUM_APP_WORDS);
 		segment = list_last_entry(
 			&desc->segments, struct xilinx_axidma_tx_segment, node);
 		segment->hw.control |= XILINX_DMA_BD_EOP;
@@ -1319,8 +1330,8 @@ xilinx_dma_prep_dma_cyclic(struct dma_chan *dchan, dma_addr_t buf_addr,
 			copy = xilinx_dma_calc_copysize(chan, period_len,
 							sg_used);
 			hw = &segment->hw;
-			xilinx_axidma_buf(chan, hw, buf_addr, sg_used,
-					  period_len * i);
+			xilinx_axidma_set_buf_addr(chan, hw, buf_addr, sg_used,
+						   period_len * i);
 			hw->control = copy;
 			if (prev)
 				prev->hw.next_desc = segment->phys;

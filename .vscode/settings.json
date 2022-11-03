@@ -50,7 +50,7 @@
 			},
 		}
 	},
-	"workbench.colorTheme": "Atom One Light",
+	"workbench.colorTheme": "Default Dark+",
 	"oneDarkPro.vivid": true,
 	"oneDarkPro.bold": true,
 	"files.associations": {
