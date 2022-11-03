@@ -393,13 +393,13 @@ static inline void xilinx_axidma_set_buf_addr(struct xilinx_dma_chan *chan,
 					      const size_t sg_used,
 					      const size_t period_len)
 {
-	if (unlikely(chan->ext_addr)) {
-		hw->buf_addr = lower_32_bits(buf_addr + sg_used + period_len);
-		hw->buf_addr_msb =
-			upper_32_bits(buf_addr + sg_used + period_len);
-	} else {
-		hw->buf_addr = buf_addr + sg_used + period_len;
-	}
+	// if (unlikely(chan->ext_addr)) {
+	// 	hw->buf_addr = lower_32_bits(buf_addr + sg_used + period_len);
+	// 	hw->buf_addr_msb =
+	// 		upper_32_bits(buf_addr + sg_used + period_len);
+	// } else {
+	hw->buf_addr = buf_addr + sg_used + period_len;
+	// }
 }
 
 /**
@@ -1243,8 +1243,10 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 			xilinx_axidma_set_buf_addr(chan, hw, sg_dma_address(sg),
 						   sg_used, 0);
 			hw->control = copy;
-			dev_info(chan->dev, "hw->buf_addr = %p \n",
-				 hw->buf_addr);
+
+			// FIXME: we shall remove it later
+			dev_info(chan->dev, "hw->buf_addr = %p ,sg_used = %d\n",
+				 hw->buf_addr, sg_used);
 
 			sg_used += copy;
 
