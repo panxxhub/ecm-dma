@@ -852,8 +852,12 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 	if (chan->err)
 		return;
 
-	if (list_empty(&chan->pending_list))
+	if (list_empty(&chan->pending_list)) {
+		// FIXME: just for debug, remove it later
+		dev_info(chan->dev, "No pending descriptors for channel %p\n",
+			 chan);
 		return;
+	}
 	if (!chan->idle)
 		return;
 
@@ -1109,8 +1113,6 @@ static void append_desc_queue(struct xilinx_dma_chan *chan,
 				       struct xilinx_axidma_tx_segment, node);
 	tail_segment->hw.next_desc = cpu_to_le32(desc->async_tx.phys);
 append:
-	// FIXME: just for debug, remove it later
-	dev_info(chan->dev, "append desc %p to queue\n", &desc->node);
 	list_add_tail(&desc->node, &chan->pending_list);
 	chan->desc_pendingcount++;
 }
