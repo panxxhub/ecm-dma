@@ -891,7 +891,10 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 
 	if (chan->has_sg) {
 		if (chan->cyclic)
-			// to start cyclic transfer, set he tail descriptor to a detached descriptor
+			/**
+			 * @brief The Tail Descriptor does not serve any purpose and is used only
+			 * to trigger the DMA engine to start the transfer.
+			 */
 			xilinx_write(chan, XILINX_DMA_REG_TAILDESC,
 				     chan->cyclic_seg_v->phys);
 		else
@@ -1320,9 +1323,15 @@ xilinx_dma_prep_dma_cyclic(struct dma_chan *dchan, dma_addr_t buf_addr,
 		while (sg_used < period_len) {
 			struct xilinx_axidma_desc_hw *hw;
 
+			/* Get a free segment */
 			segment = xilinx_axidma_alloc_tx_segment(chan);
 			if (!segment)
 				goto error;
+
+			/**
+			 * @brief Calculate the maximum number of bytes to transfer
+			 * making sure it is less than the hw limit
+			 */
 			copy = xilinx_dma_calc_copysize(chan, period_len,
 							sg_used);
 			hw = &segment->hw;
@@ -1335,6 +1344,9 @@ xilinx_dma_prep_dma_cyclic(struct dma_chan *dchan, dma_addr_t buf_addr,
 			prev = segment;
 			sg_used += copy;
 
+			/**
+			 * @brief Insert the segment into the descriptor segments
+			 */
 			list_add_tail(&segment->node, &desc->segments);
 		}
 	}
@@ -1354,6 +1366,9 @@ xilinx_dma_prep_dma_cyclic(struct dma_chan *dchan, dma_addr_t buf_addr,
 
 	// FIXME: take period length into account
 	if (direction == DMA_MEM_TO_DEV) {
+		/**
+		 * @brief we only care the reg at DMA_MEM_TO_DEV direction
+		 */
 		head_segment->hw.control |= XILINX_DMA_BD_SOP;
 		segment->hw.control |= XILINX_DMA_BD_EOP;
 	}
