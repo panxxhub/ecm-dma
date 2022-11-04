@@ -1354,6 +1354,11 @@ xilinx_dma_prep_dma_cyclic(struct dma_chan *dchan, dma_addr_t buf_addr,
 	head_segment = list_first_entry(&desc->segments,
 					struct xilinx_axidma_tx_segment, node);
 	desc->async_tx.phys = head_segment->phys;
+
+	// FIXME: just for debug
+	dev_info(chan->dev, "head_segment->phys: 0x%016x\n",
+		 head_segment->phys);
+
 	desc->cyclic = true;
 	reg = dma_ctrl_read(chan, XILINX_DMA_REG_DMACR);
 	reg |= XILINX_DMA_CR_CYCLIC_BD_EN_MASK;
