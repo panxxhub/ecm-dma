@@ -1317,6 +1317,9 @@ xilinx_dma_prep_dma_cyclic(struct dma_chan *dchan, dma_addr_t buf_addr,
 	dma_async_tx_descriptor_init(&desc->async_tx, &chan->common);
 	desc->async_tx.tx_submit = xilinx_dma_tx_submit;
 
+	// FIXME: just for debug
+	dev_info(chan->dev, "buff_base addr: 0x%016x\n", buf_addr);
+
 	for (i = 0; i < num_periods; ++i) {
 		sg_used = 0;
 
@@ -1338,6 +1341,10 @@ xilinx_dma_prep_dma_cyclic(struct dma_chan *dchan, dma_addr_t buf_addr,
 			xilinx_axidma_set_buf_addr(chan, hw, buf_addr, sg_used,
 						   period_len * i);
 			hw->control = copy;
+			// FIXME: just for debug
+			dev_info(chan->dev, "hw_lsb: 0x%08x, hw_msb: 0x%08x\n",
+				 hw->buf_addr, hw->buf_addr_msb);
+
 			if (prev)
 				prev->hw.next_desc = segment->phys;
 
