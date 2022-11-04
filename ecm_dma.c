@@ -1342,8 +1342,10 @@ xilinx_dma_prep_dma_cyclic(struct dma_chan *dchan, dma_addr_t buf_addr,
 						   period_len * i);
 			hw->control = copy;
 			// FIXME: just for debug
-			dev_info(chan->dev, "hw_lsb: 0x%08x, hw_msb: 0x%08x\n",
-				 hw->buf_addr, hw->buf_addr_msb);
+			dev_info(
+				chan->dev,
+				"desc addr: 0x%16x, buff: hw_lsb: 0x%08x, hw_msb: 0x%08x\n",
+				segment->phys, hw->buf_addr, hw->buf_addr_msb);
 
 			if (prev)
 				prev->hw.next_desc = segment->phys;
