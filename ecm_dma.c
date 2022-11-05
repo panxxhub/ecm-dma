@@ -164,8 +164,8 @@ MODULE_LICENSE("GPL v2");
  * @next_desc_msb: MSB of Next Descriptor Pointer @0x04
  * @buf_addr: Buffer address @0x08
  * @buf_addr_msb: MSB of Buffer address @0x0C
- * @reserved1: Reserved @0x10
- * @reserved2: Reserved @0x14
+ * @reserved1: Reserved @0x10, [31:28] AWUSER, [27:24] AWCACHE, [23:0] Reserved(MC)
+ * @reserved2: Reserved @0x14, [31:19] VSIZE,  [18:16] RESERVED, [15:0] STRIDE(MC)
  * @control: Control field @0x18
  * @status: Status field @0x1C
  * @app: APP Fields @0x20 - 0x30
@@ -852,6 +852,7 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 {
 	struct xilinx_dma_tx_descriptor *head_desc, *tail_desc;
 	struct xilinx_axidma_tx_segment *tail_segment;
+	struct xilinx_axidma_tx_segment *head_segment;
 
 	u32 reg;
 
@@ -870,9 +871,26 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 				    struct xilinx_dma_tx_descriptor, node);
 	tail_segment = list_last_entry(&tail_desc->segments,
 				       struct xilinx_axidma_tx_segment, node);
+	head_segment = list_first_entry(&head_desc->segments,
+					struct xilinx_axidma_tx_segment, node);
+	// FIXME: just for debug, remove it later
+	// dump the head segment
+	dev_info(chan->dev, "head segment: control 0x%08x, status 0x%08x",
+		 head_segment->hw.control, head_segment->hw.status);
+
 	reg = dma_ctrl_read(chan, XILINX_DMA_REG_DMACR);
 
 	if (chan->desc_pendingcount <= XILINX_DMA_COALESCE_MAX) {
+		/**
+		 * @brief this operation would clear 
+		 * 0 RS
+		 * 1 RESERVED
+		 * 2 RESET
+		 * 3 KEYHOLE
+		 * 4 CYCLIC BD EN
+		 * 5-11 RESERVED
+		 * stops the DMA, clear cyclic en
+		 */
 		reg &= ~XILINX_DMA_COALESCE_MAX;
 		reg |= chan->desc_pendingcount << XILINX_DMA_CR_COALESCE_SHIFT;
 		dma_ctrl_write(chan, XILINX_DMA_REG_DMACR, reg);
@@ -1252,7 +1270,10 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 
 	if (chan->direction == DMA_MEM_TO_DEV) {
 		segment->hw.control |= XILINX_DMA_BD_SOP;
-		// NOTE!: we only need copy the user's APP WORDs at the first BD(TXSOF=1)
+
+		/**
+		 * @note: we only need copy the user's APP WORDs at the first BD(TXSOF=1)
+		 */
 		if (app_w)
 			memcpy(segment->hw.app, app_w,
 			       sizeof(u32) * XILINX_DMA_NUM_APP_WORDS);
