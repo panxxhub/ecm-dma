@@ -852,7 +852,6 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 {
 	struct xilinx_dma_tx_descriptor *head_desc, *tail_desc;
 	struct xilinx_axidma_tx_segment *tail_segment;
-	struct xilinx_axidma_tx_segment *head_segment;
 
 	u32 reg;
 
@@ -871,18 +870,6 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 				    struct xilinx_dma_tx_descriptor, node);
 	tail_segment = list_last_entry(&tail_desc->segments,
 				       struct xilinx_axidma_tx_segment, node);
-	head_segment = list_first_entry(&head_desc->segments,
-					struct xilinx_axidma_tx_segment, node);
-	// FIXME: just for debug, remove it later
-	// dump the head segment
-	dev_info(chan->dev, "%s:\n\
-    head segment: control 0x%08x, status 0x%08x, buff_addr 0x%08x, phys 0x%08x,\n\
-    tail segment: control 0x%08x, status 0x%08x, buff_addr 0x%08x, phys 0x%08x",
-		 chan->direction == DMA_MEM_TO_DEV ? "TX" : "RX",
-		 head_segment->hw.control, head_segment->hw.status,
-		 head_segment->hw.buf_addr, head_segment->phys,
-		 tail_segment->hw.control, tail_segment->hw.status,
-		 tail_segment->hw.buf_addr, tail_segment->phys);
 
 	reg = dma_ctrl_read(chan, XILINX_DMA_REG_DMACR);
 
