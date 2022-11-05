@@ -877,10 +877,13 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 	// dump the head segment
 	dev_info(
 		chan->dev,
-		"%s, head segment: control 0x%08x, status 0x%08x, buff_addr 0x%08x, phys 0x%08x",
+		"%s, head segment: control 0x%08x, status 0x%08x, buff_addr 0x%08x, phys 0x%08x, \
+		     tail segment: control 0x%08x, status 0x%08x, buff_addr 0x%08x, phys 0x%08x",
 		chan->direction == DMA_MEM_TO_DEV ? "TX" : "RX",
 		head_segment->hw.control, head_segment->hw.status,
-		head_segment->hw.buf_addr, head_segment->phys);
+		head_segment->hw.buf_addr, head_segment->phys,
+		tail_segment->hw.control, tail_segment->hw.status,
+		tail_segment->hw.buf_addr, tail_segment->phys);
 
 	reg = dma_ctrl_read(chan, XILINX_DMA_REG_DMACR);
 
@@ -1080,8 +1083,9 @@ static irqreturn_t xilinx_dma_irq_handler(int irq, void *data)
 		if (!chan->flush_on_fsync ||
 		    (errors & ~XILINX_DMA_DMASR_ERR_RECOVER_MASK)) {
 			dev_err(chan->dev,
-				"Channel %p has errors %x, cdr %x tdr %x\n",
-				chan, errors,
+				"Channel %s, has errors %x, cdr %x tdr %x\n",
+				chan->direction == DMA_DEV_TO_MEM ? "RX" : "TX",
+				errors,
 				dma_ctrl_read(chan, XILINX_DMA_REG_CURDESC),
 				dma_ctrl_read(chan, XILINX_DMA_REG_TAILDESC));
 			chan->err = true;
