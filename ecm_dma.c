@@ -435,7 +435,10 @@ static void xilinx_dma_clean_hw_desc(struct xilinx_axidma_desc_hw *hw)
 	u32 next_desc = hw->next_desc;
 	u32 next_desc_msb = hw->next_desc_msb;
 
-	memset(hw, 0, sizeof(struct xilinx_axidma_desc_hw));
+	// we don't need to clean the whole descriptor, only the fields that are used
+	memset(hw, 0,
+	       sizeof(struct xilinx_axidma_desc_hw) -
+		       offsetof(struct xilinx_axidma_desc_hw, app));
 
 	hw->next_desc = next_desc;
 	hw->next_desc_msb = next_desc_msb;
