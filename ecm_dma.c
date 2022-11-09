@@ -1165,6 +1165,10 @@ static dma_cookie_t xilinx_dma_tx_submit(struct dma_async_tx_descriptor *tx)
 
 	cookie = dma_cookie_assign(tx);
 
+	if (chan->direction == DMA_MEM_TO_DEV) {
+		dev_info(chan->dev, "submitting tx phys 0x%08x",
+			 desc->async_tx.phys);
+	}
 	append_desc_queue(chan, desc);
 
 	if (desc->cyclic)
@@ -1252,14 +1256,6 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 			hw->control = copy;
 
 			sg_used += copy;
-			if (app_w) {
-				dev_info(
-					chan->dev,
-					"copy: %d, addr: 0x%16x, total_len %u, phys: 0x%16x",
-					copy, sg_dma_address(sg) + sg_used,
-					app_w[4], segment->phys);
-			}
-
 			/**
 			 * @brief Insert the segment into the descriptor segments
 			 * list
@@ -1271,7 +1267,6 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 	segment = list_first_entry(&desc->segments,
 				   struct xilinx_axidma_tx_segment, node);
 	desc->async_tx.phys = segment->phys;
-	dev_info(chan->dev, "desc->async_tx.phys: 0x%16x", desc->async_tx.phys);
 
 	if (chan->direction == DMA_MEM_TO_DEV) {
 		segment->hw.control |= XILINX_DMA_BD_SOP;
