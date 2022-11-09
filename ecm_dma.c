@@ -1243,8 +1243,10 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 			copy = xilinx_dma_calc_copysize(chan, sg_dma_len(sg),
 							sg_used);
 			// FIXME, remove it later
-			dev_info(chan->dev, "copy: %d, addr: 0x%16x", copy,
-				 sg_dma_address(sg) + sg_used);
+			dev_info(chan->dev,
+				 "copy: %d, addr: 0x%16x, total_len %d", copy,
+				 sg_dma_address(sg) + sg_used,
+				 app_w[XILINX_DMA_NUM_APP_WORDS - 1]);
 			hw = &segment->hw;
 
 			/* Fill the descriptor */
@@ -1255,6 +1257,9 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 			hw->control = copy;
 
 			sg_used += copy;
+			if (app_w)
+				memcpy(hw->app, app_w,
+				       sizeof(u32) * XILINX_DMA_NUM_APP_WORDS);
 
 			/**
 			 * @brief Insert the segment into the descriptor segments
@@ -1274,9 +1279,9 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 		/**
 		 * @note: we only need copy the user's APP WORDs at the first BD(TXSOF=1)
 		 */
-		if (app_w)
-			memcpy(segment->hw.app, app_w,
-			       sizeof(u32) * XILINX_DMA_NUM_APP_WORDS);
+		// if (app_w)
+		// 	memcpy(segment->hw.app, app_w,
+		// 	       sizeof(u32) * XILINX_DMA_NUM_APP_WORDS);
 		segment = list_last_entry(
 			&desc->segments, struct xilinx_axidma_tx_segment, node);
 		segment->hw.control |= XILINX_DMA_BD_EOP;
