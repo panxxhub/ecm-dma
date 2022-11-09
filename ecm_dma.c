@@ -730,7 +730,7 @@ static int xilinx_dma_alloc_chan_resources(struct dma_chan *dma_chan)
 	for (i = 0; i < XILINX_DMA_NUM_DESCS; i++) {
 		desc_addr =
 			chan->seg_p +
-			sizeof(*chan->seg_v) * ((i + 1) * XILINX_DMA_NUM_DESCS);
+			sizeof(*chan->seg_v) * ((i + 1) % XILINX_DMA_NUM_DESCS);
 
 		chan->seg_v[i].hw.next_desc = lower_32_bits(desc_addr);
 		chan->seg_v[i].hw.next_desc_msb = upper_32_bits(desc_addr);
@@ -891,11 +891,12 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 		reg |= chan->desc_pendingcount << XILINX_DMA_CR_COALESCE_SHIFT;
 		dma_ctrl_write(chan, XILINX_DMA_REG_DMACR, reg);
 	}
-	if (chan->direction == DMA_MEM_TO_DEV &&
-	    head_desc->async_tx.phys != tail_segment->phys) {
-		dev_info(chan->dev, "head 0x%08x, tail 0x%08x",
-			 head_desc->async_tx.phys, tail_segment->phys);
-	}
+
+	// if (chan->direction == DMA_MEM_TO_DEV &&
+	//     head_desc->async_tx.phys != tail_segment->phys) {
+	// 	dev_info(chan->dev, "head 0x%08x, tail 0x%08x",
+	// 		 head_desc->async_tx.phys, tail_segment->phys);
+	// }
 
 	if (chan->has_sg)
 		xilinx_write(chan, XILINX_DMA_REG_CURDESC,
