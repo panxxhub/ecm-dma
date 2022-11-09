@@ -1242,6 +1242,9 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 				goto error;
 			copy = xilinx_dma_calc_copysize(chan, sg_dma_len(sg),
 							sg_used);
+			// FIXME, remove it later
+			dev_info(chan->dev, "copy: %d, addr: 0x%16x", copy,
+				 sg_dma_address(sg) + sg_used);
 			hw = &segment->hw;
 
 			/* Fill the descriptor */
