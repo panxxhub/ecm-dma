@@ -1120,16 +1120,26 @@ static void append_desc_queue(struct xilinx_dma_chan *chan,
 			      struct xilinx_dma_tx_descriptor *desc)
 {
 	struct xilinx_dma_tx_descriptor *tail_desc;
+	struct xilinx_dma_tx_descriptor *head_desc;
+
 	struct xilinx_axidma_tx_segment *tail_segment;
 
 	if (list_empty(&chan->pending_list))
 		goto append;
+
+	head_desc = list_first_entry(&chan->pending_list,
+				     struct xilinx_dma_tx_descriptor, node);
 
 	tail_desc = list_last_entry(&chan->pending_list,
 				    struct xilinx_dma_tx_descriptor, node);
 	tail_segment = list_last_entry(&tail_desc->segments,
 				       struct xilinx_axidma_tx_segment, node);
 	tail_segment->hw.next_desc = cpu_to_le32(desc->async_tx.phys);
+	if (chan->direction == DMA_MEM_TO_DEV) {
+		dev_info(chan->dev, "not empty head 0x%08x, tail 0x%08x",
+			 head_desc->async_tx.phys, desc->async_tx.phys);
+	}
+
 append:
 	// add the new descriptor to the pending list
 	list_add_tail(&desc->node, &chan->pending_list);
@@ -1165,10 +1175,6 @@ static dma_cookie_t xilinx_dma_tx_submit(struct dma_async_tx_descriptor *tx)
 
 	cookie = dma_cookie_assign(tx);
 
-	if (chan->direction == DMA_MEM_TO_DEV) {
-		dev_info(chan->dev, "submitting tx phys 0x%08x",
-			 desc->async_tx.phys);
-	}
 	append_desc_queue(chan, desc);
 
 	if (desc->cyclic)
