@@ -1253,8 +1253,6 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 
 			sg_used += copy;
 			if (app_w) {
-				memcpy(hw->app, app_w,
-				       sizeof(u32) * XILINX_DMA_NUM_APP_WORDS);
 				dev_info(
 					chan->dev,
 					"copy: %d, addr: 0x%16x, total_len %u, phys: 0x%16x",
@@ -1273,6 +1271,7 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 	segment = list_first_entry(&desc->segments,
 				   struct xilinx_axidma_tx_segment, node);
 	desc->async_tx.phys = segment->phys;
+	dev_info(chan->dev, "desc->async_tx.phys: 0x%16x", desc->async_tx.phys);
 
 	if (chan->direction == DMA_MEM_TO_DEV) {
 		segment->hw.control |= XILINX_DMA_BD_SOP;
