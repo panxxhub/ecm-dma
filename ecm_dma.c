@@ -1242,11 +1242,6 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 				goto error;
 			copy = xilinx_dma_calc_copysize(chan, sg_dma_len(sg),
 							sg_used);
-			// FIXME, remove it later
-			dev_info(chan->dev,
-				 "copy: %d, addr: 0x%16x, total_len %d", copy,
-				 sg_dma_address(sg) + sg_used,
-				 app_w[XILINX_DMA_NUM_APP_WORDS - 1]);
 			hw = &segment->hw;
 
 			/* Fill the descriptor */
@@ -1257,9 +1252,14 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 			hw->control = copy;
 
 			sg_used += copy;
-			if (app_w)
+			if (app_w) {
 				memcpy(hw->app, app_w,
 				       sizeof(u32) * XILINX_DMA_NUM_APP_WORDS);
+				dev_info(chan->dev,
+					 "copy: %d, addr: 0x%16x, total_len %u",
+					 copy, sg_dma_address(sg) + sg_used,
+					 app_w[4]);
+			}
 
 			/**
 			 * @brief Insert the segment into the descriptor segments
