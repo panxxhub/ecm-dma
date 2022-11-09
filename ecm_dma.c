@@ -1255,10 +1255,11 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 			if (app_w) {
 				memcpy(hw->app, app_w,
 				       sizeof(u32) * XILINX_DMA_NUM_APP_WORDS);
-				dev_info(chan->dev,
-					 "copy: %d, addr: 0x%16x, total_len %u",
-					 copy, sg_dma_address(sg) + sg_used,
-					 app_w[4]);
+				dev_info(
+					chan->dev,
+					"copy: %d, addr: 0x%16x, total_len %u, phys: 0x%16x",
+					copy, sg_dma_address(sg) + sg_used,
+					app_w[4], segment->phys);
 			}
 
 			/**
@@ -1279,9 +1280,9 @@ xilinx_dma_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
 		/**
 		 * @note: we only need copy the user's APP WORDs at the first BD(TXSOF=1)
 		 */
-		// if (app_w)
-		// 	memcpy(segment->hw.app, app_w,
-		// 	       sizeof(u32) * XILINX_DMA_NUM_APP_WORDS);
+		if (app_w)
+			memcpy(segment->hw.app, app_w,
+			       sizeof(u32) * XILINX_DMA_NUM_APP_WORDS);
 		segment = list_last_entry(
 			&desc->segments, struct xilinx_axidma_tx_segment, node);
 		segment->hw.control |= XILINX_DMA_BD_EOP;
