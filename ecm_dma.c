@@ -891,7 +891,8 @@ static void xilinx_dma_start_transfer(struct xilinx_dma_chan *chan)
 		reg |= chan->desc_pendingcount << XILINX_DMA_CR_COALESCE_SHIFT;
 		dma_ctrl_write(chan, XILINX_DMA_REG_DMACR, reg);
 	}
-	if (chan->direction == DMA_MEM_TO_DEV) {
+	if (chan->direction == DMA_MEM_TO_DEV &&
+	    head_desc->async_tx.phys != tail_desc->async_tx.phys) {
 		dev_info(chan->dev, "head 0x%08x, tail 0x%08x",
 			 head_desc->async_tx.phys, tail_desc->async_tx.phys);
 	}
