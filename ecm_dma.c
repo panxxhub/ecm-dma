@@ -1,5 +1,6 @@
 #include "dma_engine.h"
 
+#include "linux/cpumask.h"
 #include <linux/of_address.h>
 #include <linux/bits.h>
 #include <linux/irqreturn.h>
@@ -1611,6 +1612,10 @@ static int xilinx_dma_chan_probe(struct xilinx_dma_device *xdev,
 				     "failed to get irq\n");
 	err = request_irq(chan->irq, xilinx_dma_irq_handler, IRQF_SHARED,
 			  "xilinx-dma-controller", chan);
+
+	// set irq affinity cpu 3
+	irq_set_affinity_hint(chan->irq, cpumask_of(nr_cpu_ids - 1));
+
 	if (err) {
 		dev_err(xdev->dev, "unable to request IRQ %d\n", chan->irq);
 		return err;
