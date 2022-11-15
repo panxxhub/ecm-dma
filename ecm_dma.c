@@ -1614,7 +1614,9 @@ static int xilinx_dma_chan_probe(struct xilinx_dma_device *xdev,
 			  "xilinx-dma-controller", chan);
 
 	// set irq affinity cpu 3
-	irq_set_affinity_hint(chan->irq, cpumask_of(nr_cpu_ids - 1));
+	if (nr_cpu_ids > 1) {
+		irq_set_affinity_hint(chan->irq, cpumask_of(nr_cpu_ids - 2));
+	}
 
 	if (err) {
 		dev_err(xdev->dev, "unable to request IRQ %d\n", chan->irq);
