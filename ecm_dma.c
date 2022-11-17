@@ -661,6 +661,9 @@ static void xilinx_dma_chan_desc_cleanup(struct xilinx_dma_chan *chan)
 
 		/* Run any dependencies, then free the descriptor */
 		dma_run_dependencies(&desc->async_tx);
+		/**
+		 * @brief free de descriptor, when we allocated at prepare stage
+		 */
 		xilinx_dma_free_tx_descriptor(chan, desc);
 
 		/**
