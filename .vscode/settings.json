@@ -10,6 +10,7 @@
 	"clangd.path": "/usr/bin/clangd-15",
 	"clangd.arguments": [
 		"--compile-commands-dir=${workspaceFolder}",
+		"--query-driver=/usr/bin/aarch64-linux-gnu-gcc",
 		"--pch-storage=memory",
 		"--clang-tidy=true",
 		"--all-scopes-completion=true",
@@ -50,7 +51,7 @@
 			},
 		}
 	},
-	"workbench.colorTheme": "Bluloco Light",
+	"workbench.colorTheme": "Noxus Theme",
 	"oneDarkPro.vivid": true,
 	"oneDarkPro.bold": true,
 	"files.associations": {
